@@ -352,7 +352,7 @@ func (migrationData *MigrationData) lineprotocol(point whisper.Point) string {
 	line += migrationData.measurement
 	line += migrationData.tags
 	line += " "
-	line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', -1, 64) + "i"
+	line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', -1, 32)
 	line += " "
 	line += strconv.FormatInt(int64(point.Timestamp), 10)
 	return line
