@@ -174,9 +174,15 @@ func LineProtocolContext(database, retention string) string {
 // Export the series described in the migration object
 func (migration *MigrationData) export(from, until uint32) {
 	// Open whisper file with driver
-	w, err := whisper.Open(migration.wspFile)
+	file, err := os.OpenFile(migration.wspFile, os.O_RDONLY, 0755)
 	if err != nil {
 		fmt.Println("\nError opening file:", err)
+		return
+	}
+
+	w, err := whisper.OpenWhisper(file)
+	if err != nil {
+		fmt.Println("\nError reading file:", err)
 		return
 	}
 
