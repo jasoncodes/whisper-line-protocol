@@ -9,7 +9,6 @@ import (
 	"github.com/uttamgandhi24/whisper-go/whisper"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -208,7 +207,7 @@ func (migration *MigrationData) export(from, until uint32) {
 			}
 
 			// Write the point to file
-			line := migration.lineprotocol(point, archive.SecondsPerPoint) + "\n"
+			line := migration.lineprotocol(point) + "\n"
 			_, err := buffer.Buffer.WriteString(line)
 			check(err)
 		}
@@ -348,12 +347,12 @@ func LoadConfigFile(filename string) []MigrationConfig {
 
 
 // Generate the influxdb line protocol string for a given point
-func (migrationData *MigrationData) lineprotocol(point whisper.Point, factor uint32) string {
+func (migrationData *MigrationData) lineprotocol(point whisper.Point) string {
 	var line string
 	line += migrationData.measurement
 	line += migrationData.tags
 	line += " "
-	line += migrationData.field + "=" + strconv.FormatFloat(math.Ceil(point.Value * float64(factor)), 'f', -1, 64) + "i"
+	line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', -1, 64) + "i"
 	line += " "
 	line += strconv.FormatInt(int64(point.Timestamp), 10)
 	return line
