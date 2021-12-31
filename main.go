@@ -52,6 +52,7 @@ var buffers map[uint32]MigrationBuffer = make(map[uint32]MigrationBuffer)
 var exportedFileNumber = 0
 var (
 	verbose        = flag.Bool("verbose", false, "Increase verbosity.")
+	yes            = flag.Bool("yes", false, "Automatic yes to prompts.")
 	wspPath        = flag.String("wsp-path", "", "Whisper files folder path.")
 	exportPath     = flag.String("export-path", "", "Target directory where line protocol files will be created.")
 	configFile     = flag.String("config-file", "", "Configuration file for measurement and tags.")
@@ -79,7 +80,7 @@ func main() {
 	// Warning starting exporting
 	fmt.Println("----------------")
 	fmt.Println("Exporting", len(migrations), "series to", *exportPath)
-	if askForConfirmation("Proceed ?") == false {
+	if !*yes && askForConfirmation("Proceed ?") == false {
 		os.Exit(1)
 	}
 	fmt.Println("----------------")
