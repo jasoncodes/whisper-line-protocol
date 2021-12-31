@@ -51,7 +51,7 @@ type MigrationConfig struct {
 var buffers map[uint32]MigrationBuffer = make(map[uint32]MigrationBuffer)
 var exportedFileNumber = 0
 var (
-	verbose        = flag.Bool("verbose", false, "Configuration file for measurement and tags.")
+	verbose        = flag.Bool("verbose", false, "Increase verbosity.")
 	wspPath        = flag.String("wsp-path", "", "Whisper files folder path.")
 	exportPath     = flag.String("export-path", "", "Target directory where line protocol files will be created.")
 	configFile     = flag.String("config-file", "", "Configuration file for measurement and tags.")
@@ -60,7 +60,7 @@ var (
 	gzipped        = flag.Bool("gz", false, "Export data in a gzipped file.")
 	exportZeros    = flag.Bool("zeros", false, "Export null values (equal to zero). Those are ignored by default.")
 	database       = flag.String("database", "graphite" ,"Name of the influxdb database to use in export context.")
-	retentionsStr  = flag.String("retentions", "" ,"Coma-separated retention names to use in export context.")
+	retentionsStr  = flag.String("retentions", "" ,"Comma-separated retention names to use in export context.")
 )
 
 var retentions []string
