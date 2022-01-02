@@ -433,6 +433,7 @@ func (migrationData *MigrationData) assignConfig(migrationConfig []MigrationConf
 	for i := len(matched) - 1; i > 0; i-- {
 		re := regexp.MustCompile("{{\\s" + wildcards[i - 1][1] + "\\s}}")
 
+		matched[i] = strings.Replace(matched[i], "-", "_", -1)
 		migrationData.measurement = re.ReplaceAllLiteralString(migrationData.measurement, matched[i])
 		migrationData.field = re.ReplaceAllLiteralString(migrationData.field, matched[i])
 		migrationData.tags = re.ReplaceAllLiteralString(migrationData.tags, matched[i])
