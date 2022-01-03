@@ -9,6 +9,7 @@ import (
 	"github.com/uttamgandhi24/whisper-go/whisper"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -60,6 +61,7 @@ var (
 	untilFlag      = flag.Uint("until", uint(^uint32(0)), "Only export points before the given timestamp.")
 	gzipped        = flag.Bool("gz", false, "Export data in a gzipped file.")
 	exportZeros    = flag.Bool("zeros", false, "Export null values (equal to zero). Those are ignored by default.")
+	exportOverlaps = flag.Bool("overlaps", false, "Export values from overlapping archive retention period.")
 	database       = flag.String("database", "graphite" ,"Name of the influxdb database to use in export context.")
 	retentionsStr  = flag.String("retentions", "" ,"Comma-separated retention names to use in export context.")
 )
@@ -186,6 +188,9 @@ func (migration *MigrationData) export(from, until uint32) {
 		return
 	}
 
+	var latestFileTimestamp uint32 = 0
+	var latestAllowedArchiveTimestamp uint32 = math.MaxUint32
+
 	for i, archive := range w.Header.Archives {
 		// retrieve the buffer
 		buffer := RetrieveMigrationBuffer(archive.SecondsPerPoint)
@@ -198,6 +203,14 @@ func (migration *MigrationData) export(from, until uint32) {
 			}
 			continue
 		}
+
+		if latestFileTimestamp == 0 {
+			latestFileTimestamp = points[len(points)-1].Timestamp
+		}
+
+		var earliestAllowedArchiveTimestamp = latestFileTimestamp - (archive.SecondsPerPoint * archive.Points)
+		var earliestSeenArchiveTimestamp uint32 = math.MaxUint32
+
 		for _, point := range points {
 			// Skip the point on certain conditions
 			if !*exportZeros && point.Value == 0 {
@@ -206,12 +219,26 @@ func (migration *MigrationData) export(from, until uint32) {
 			if point.Timestamp < from || point.Timestamp > until {
 				continue
 			}
+			if !*exportOverlaps && (point.Timestamp < earliestAllowedArchiveTimestamp || point.Timestamp >= latestAllowedArchiveTimestamp) {
+				continue
+			}
+
+			if point.Timestamp < earliestSeenArchiveTimestamp {
+				earliestSeenArchiveTimestamp = point.Timestamp
+			}
 
 			// Write the point to file
 			line := migration.lineprotocol(point) + "\n"
 			_, err := buffer.Buffer.WriteString(line)
 			check(err)
 		}
+
+		var earliestEffectiveArchiveTimestamp = earliestAllowedArchiveTimestamp;
+		if earliestSeenArchiveTimestamp > earliestEffectiveArchiveTimestamp && earliestSeenArchiveTimestamp < math.MaxUint32 {
+			earliestEffectiveArchiveTimestamp = earliestSeenArchiveTimestamp
+		}
+
+		latestAllowedArchiveTimestamp = earliestEffectiveArchiveTimestamp
 	}
 
 	w.Close()
