@@ -61,6 +61,7 @@ var (
 	untilFlag      = flag.Uint("until", uint(^uint32(0)), "Only export points before the given timestamp.")
 	gzipped        = flag.Bool("gz", false, "Export data in a gzipped file.")
 	exportZeros    = flag.Bool("zeros", false, "Export null values (equal to zero). Those are ignored by default.")
+	exportInts     = flag.Bool("ints", false, "Export values as integers. Default is to export as floats.")
 	exportOverlaps = flag.Bool("overlaps", false, "Export values from overlapping archive retention period.")
 	database       = flag.String("database", "graphite" ,"Name of the influxdb database to use in export context.")
 	retentionsStr  = flag.String("retentions", "" ,"Comma-separated retention names to use in export context.")
@@ -380,7 +381,11 @@ func (migrationData *MigrationData) lineprotocol(point whisper.Point) string {
 	line += migrationData.measurement
 	line += migrationData.tags
 	line += " "
-	line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', -1, 32)
+	if *exportInts {
+		line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', 0, 32) + "i"
+	} else {
+		line += migrationData.field + "=" + strconv.FormatFloat(point.Value, 'f', -1, 32)
+	}
 	line += " "
 	line += strconv.FormatInt(int64(point.Timestamp), 10)
 	return line
